@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kvíz – Rodinné právo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #533483 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .glass {
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.20);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+
+  /* ── SCREEN WRAPPERS ── */
+  .screen {
+    display: none;
+    width: 100%;
+    max-width: 680px;
+    animation: fadeIn .4s ease;
+  }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── MENU ── */
+  #menuScreen .card {
+    padding: 52px 48px 40px;
+    text-align: center;
+    width: 100%;
+  }
+  .menu-icon { font-size: 3.2rem; margin-bottom: 16px; }
+  #menuScreen h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  #menuScreen p.subtitle {
+    color: rgba(255,255,255,0.6);
+    font-size: .95rem;
+    margin-bottom: 36px;
+  }
+  .btn-start {
+    background: linear-gradient(135deg, #a78bfa, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 56px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.45);
+    letter-spacing: .5px;
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.55); }
+  .btn-start:active { transform: translateY(0); }
+
+  /* ── QUIZ ── */
+  #quizScreen { gap: 18px; }
+
+  .top-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px;
+  }
+  .top-bar .label {
+    color: rgba(255,255,255,0.6);
+    font-size: .82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .score-badge {
+    background: rgba(99,102,241,0.35);
+    border: 1px solid rgba(99,102,241,0.5);
+    border-radius: 50px;
+    padding: 6px 18px;
+    color: #fff;
+    font-weight: 700;
+    font-size: .95rem;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #a78bfa, #6366f1);
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+
+  .question-card {
+    width: 100%;
+    padding: 36px 40px 32px;
+  }
+  .q-number {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #a78bfa;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+  .q-text {
+    font-size: 1.08rem;
+    color: #f0f0ff;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  .answer-btns {
+    width: 100%;
+    display: flex;
+    gap: 14px;
+  }
+  .btn-answer {
+    flex: 1;
+    padding: 18px 10px;
+    border-radius: 16px;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .12s;
+    letter-spacing: .3px;
+  }
+  .btn-answer:hover:not(:disabled) {
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.35);
+    transform: translateY(-2px);
+  }
+  .btn-answer:active:not(:disabled) { transform: translateY(0); }
+
+  .btn-answer.correct {
+    background: rgba(34,197,94,0.28);
+    border-color: #22c55e;
+    color: #86efac;
+  }
+  .btn-answer.wrong {
+    background: rgba(239,68,68,0.28);
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+  .btn-answer:disabled { cursor: default; }
+
+  .feedback-box {
+    width: 100%;
+    padding: 16px 22px;
+    border-radius: 16px;
+    font-size: .95rem;
+    font-weight: 600;
+    text-align: center;
+    transition: all .3s;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .feedback-box.correct {
+    background: rgba(34,197,94,0.18);
+    border: 1px solid rgba(34,197,94,0.4);
+    color: #86efac;
+  }
+  .feedback-box.wrong {
+    background: rgba(239,68,68,0.18);
+    border: 1px solid rgba(239,68,68,0.4);
+    color: #fca5a5;
+  }
+  .feedback-box.hidden { opacity: 0; pointer-events: none; }
+
+  .btn-next {
+    background: linear-gradient(135deg, #a78bfa, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 15px 40px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s, opacity .2s;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+    align-self: flex-end;
+    margin-right: 0;
+    width: 100%;
+  }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+  .btn-next.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── RESULT ── */
+  #resultScreen { gap: 18px; }
+  .result-card {
+    width: 100%;
+    padding: 44px 40px 36px;
+    text-align: center;
+  }
+  .result-emoji { font-size: 3.5rem; margin-bottom: 12px; }
+  .result-card h2 { color: #fff; font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+  .result-card p { color: rgba(255,255,255,0.65); font-size: 1rem; margin-bottom: 6px; }
+  .big-score {
+    font-size: 3.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #a78bfa, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 16px 0;
+  }
+  .result-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  .btn-retry, .btn-menu, .btn-wrong-retry {
+    border: none;
+    border-radius: 14px;
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-wrong-retry {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(239,68,68,0.35);
+  }
+  .btn-wrong-retry:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(239,68,68,0.45); }
+  .btn-retry {
+    background: linear-gradient(135deg, #a78bfa, #6366f1);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  }
+  .btn-retry:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+  .btn-menu {
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    color: #fff;
+  }
+  .btn-menu:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }
+  .btn-wrong-retry.hidden { display: none; }
+
+  /* ── FOOTER NOTE ── */
+  .footer-note {
+    margin-top: 22px;
+    color: rgba(255,255,255,0.35);
+    font-size: .78rem;
+    text-align: center;
+    max-width: 480px;
+  }
+  .footer-note span { color: rgba(167,139,250,0.7); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ════════════ MENU ════════════ -->
+<div id="menuScreen" class="screen active">
+  <div class="card glass">
+    <div class="menu-icon">⚖️</div>
+    <h1>Otázky na opravný test<br>z rodinného práva</h1>
+    <p class="subtitle">Pravda / Nepravda · náhodné poradie · okamžitá spätná väzba</p>
+    <button class="btn-start" onclick="startQuiz(false)">▶&nbsp;&nbsp;Štart</button>
+  </div>
+  <p class="footer-note">Kvíz je vyhotovený vďaka otázkam poskytnutým <span>Majkou</span> 🙏</p>
+</div>
+
+<!-- ════════════ QUIZ ════════════ -->
+<div id="quizScreen" class="screen">
+  <div class="top-bar glass">
+    <span class="label" id="qCounter">Otázka 1 / 50</span>
+    <span class="score-badge">✅ <span id="scoreNum">0</span> správnych</span>
+  </div>
+  <div class="progress-wrap" style="max-width:680px;width:100%;">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="question-card glass">
+    <p class="q-number" id="qNumber">Výrok #1</p>
+    <p class="q-text" id="qText">…</p>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-answer" id="btnTrue"  onclick="answer(true)">✅&nbsp; PRAVDA</button>
+    <button class="btn-answer" id="btnFalse" onclick="answer(false)">❌&nbsp; NEPRAVDA</button>
+  </div>
+  <div class="feedback-box hidden" id="feedbackBox"></div>
+  <button class="btn-next hidden" id="btnNext" onclick="nextQuestion()">Ďalšia otázka →</button>
+</div>
+
+<!-- ════════════ RESULT ════════════ -->
+<div id="resultScreen" class="screen">
+  <div class="result-card glass">
+    <div class="result-emoji" id="resultEmoji">🎉</div>
+    <h2 id="resultTitle">Výsledok</h2>
+    <p id="resultSub">Dosiahnuté skóre</p>
+    <div class="big-score" id="resultScore">0/0</div>
+    <p id="resultPct" style="margin-bottom:28px;"></p>
+    <div class="result-btns">
+      <button class="btn-wrong-retry hidden" id="btnWrongRetry" onclick="startQuiz(true)">🔄&nbsp; Zopakovať nesprávne odpovede</button>
+      <button class="btn-retry" onclick="startQuiz(false)">↺&nbsp; Znova (celý kvíz)</button>
+      <button class="btn-menu" onclick="goMenu()">🏠&nbsp; Hlavné menu</button>
+    </div>
+  </div>
+  <p class="footer-note">Kvíz je vyhotovený vďaka otázkam poskytnutým <span>Majkou</span> 🙏</p>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  { id:1,  text:"Osvojenie môže súd zrušiť z vážnych dôvodov, ktoré sú v záujme maloletého dieťaťa, do 7 mesiacov odo dňa právoplatnosti rozhodnutia o osvojení na návrh osvojenca alebo osvojiteľa alebo aj bez návrhu.", answer:false },
+  { id:2,  text:"Za otca sa považuje muž, ktorý s matkou dieťaťa súložil v čase, od ktorého neprešlo do narodenia dieťaťa viac ako stoosemdesiat a menej ako tristo dní, ak jeho otcovstvo nevylučujú závažné okolnosti.", answer:false },
+  { id:3,  text:"Za otca sa považuje muž, ktorý s matkou dieťaťa súložil v čase, od ktorého neprešlo do narodenia dieťaťa viac ako stoosemdesiat a menej ako tristosedemdesiat, ak jeho otcovstvo nevylučujú závažné okolnosti.", answer:false },
+  { id:4,  text:"Prvá a druhá domnienka sú podmienené rozhodnutím súdu.", answer:false },
+  { id:5,  text:"Osvojením zanikajú rodičovské práva a povinnosti medzi osvojencom a pôvodnou rodinou.", answer:true },
+  { id:6,  text:"Právny poriadok Slovenskej republiky umožňuje uzavrieť dohodu, že žena vynosí dieťa a matkou sa stane iná.", answer:false },
+  { id:7,  text:"Ak manželstvo uzavrie 15-ročný maloletý, súd aj bez návrhu rozhodne, že manželstvo je neplatné.", answer:false },
+  { id:8,  text:"Ak rodičia boli pozbavení rodičovských práv a povinností, súd ustanoví maloletému dieťaťu kolízneho opatrovníka, ktorý ho bude v konaní alebo pri určitom právnom úkone zastupovať.", answer:false },
+  { id:9,  text:"Manžel môže do dvoch rokov odo dňa, keď sa dozvedel o skutočnostiach dôvodne spochybňujúcich, že je otcom dieťaťa, ktoré sa narodilo jeho manželke, zaprieť na súde, že je jeho otcom.", answer:false },
+  { id:10, text:"Vyživovacia povinnosť detí voči rodičom predchádza vyživovaciu povinnosť medzi manželmi.", answer:false },
+  { id:11, text:"Právo na výživné sa premlčuje.", answer:false },
+  { id:14, text:"Podľa Civilného mimosporového poriadku o návrhu na nariadenie neodkladného opatrenia vo veciach ochrany maloletého rozhodne súd najneskôr do 24 hodín od doručenia návrhu.", answer:true },
+  { id:15, text:"Nemožno zaprieť otcovstvo voči vydatej matke zo strany muža, kým manžel nezaprie.", answer:true },
+  { id:16, text:"Zapretie v jednej z 2 prvých podmienok je možné.", answer:true },
+  { id:17, text:"Rodičia odovzdajú dieťaťu jeho majetok, ktorý spravovali, najneskôr do 30 dní od dosiahnutia plnoletosti dieťaťa.", answer:true },
+  { id:18, text:"Maloleté dieťa má právo požiadať rodičov alebo osoby, ktoré spravujú jeho majetok, o vyúčtovanie týkajúce sa správy jeho majetku do 3 rokov po skončení správy majetku.", answer:false },
+  { id:19, text:"Zákon o rodine obsahuje osobitné ustanovenia o spôsobilosti na právne úkony.", answer:false },
+  { id:20, text:"Rodinné právo je samostatné odvetvie, čo umocňuje osobitný zákon.", answer:true },
+  { id:21, text:"Rodinné právo je rýdzo súkromnoprávneho charakteru.", answer:false },
+  { id:22, text:"Definícia manželstva je iba v Ústave SR.", answer:false },
+  { id:23, text:"Pestún si nemôže dieťa osvojiť.", answer:false },
+  { id:24, text:"Vzniká nový vzťah medzi osvojiteľom a osvojencom, a ten existuje popri vzťahu dieťaťa k pôvodnej rodine.", answer:false },
+  { id:26, text:"Pri uložení výchovného opatrenia sa vždy musí odňať dieťa.", answer:false },
+  { id:27, text:"Popri návrhu na výživné medzi manželmi sa musí podať návrh na rozvod.", answer:false },
+  { id:28, text:"Výživné rozvedenému manželovi možno priznať na 2 roky, predĺžiť najviac na 5 rokov.", answer:false },
+  { id:29, text:"Výživné nevydatej matke sa plní najviac po dobu 2 rokov.", answer:true },
+  { id:30, text:"Ústavná starostlivosť má prednosť pred pestúnskou.", answer:false },
+  { id:31, text:"Manželstvo možno uzavrieť pred akoukoľvek cirkvou.", answer:false },
+  { id:32, text:"Po vyhlásení neplatnosti manželstva bezpodielové spoluvlastníctvo treba vysporiadať.", answer:false },
+  { id:33, text:"Bezpodielové spoluvlastníctvo možno vyporiadať aj počas manželstva.", answer:false },
+  { id:34, text:"Jednou z možností, keď sa manželstvo vyhlási za neplatné, je keď má osoba 15 rokov.", answer:false },
+  { id:35, text:"Občiansky zákonník obsahuje domnienky otcovstva.", answer:false },
+  { id:'VM', text:"Vyživovacia povinnosť medzi manželmi má prednosť pred vyživovacou povinnosťou detí k rodičom.", answer:true },
+  { id:36, text:"Výživné sa platí v pravidelných opakujúcich sa sumách, ktoré sú zročné vždy na mesiac dozadu.", answer:false },
+  { id:37, text:"Právo na výživné sa nepremlčuje.", answer:true },
+  { id:38, text:"Ak si rodič nesplní povinnosti, predpokladá sa, že výška jeho priemerného mesačného príjmu predstavuje dvadsaťnásobok sumy životného minima.", answer:true },
+  { id:39, text:"Určiť otcovstvo je možné až k narodenému dieťaťu.", answer:false },
+  { id:40, text:"Matka nemôže zaprieť otcovstvo po súhlasnom vyhlásení rodičov.", answer:false },
+  { id:41, text:"Muž, ktorého otcovstvo bolo určené súhlasným vyhlásením rodičov, môže otcovstvo pred súdom zaprieť do troch rokov odo dňa jeho určenia, len ak je vylúčené, že by mohol byť otcom.", answer:true },
+  { id:42, text:"Aj matka dieťaťa môže v rovnakej lehote zaprieť, že otcom dieťaťa je muž, ktorého otcovstvo bolo určené súhlasným vyhlásením rodičov.", answer:true },
+  { id:62, text:"Jedným zo znakov rodinného práva je solidarita.", answer:true },
+  { id:43, text:"Otcovstvo možno zaprieť, ak sa dieťa narodilo viac ako 300 dní po zániku manželstva.", answer:true },
+  { id:44, text:"Výnosy z majetku maloletého si môžu rodičia ponechať.", answer:false },
+  { id:45, text:"Manželia si musia byť verní a rešpektovať sa.", answer:true },
+  { id:46, text:"Majetkového opatrovníka môžu určiť rodičia.", answer:false },
+  { id:47, text:"Súd ustanovuje za opatrovníka najmä toho, koho navrhnú rodičia.", answer:false },
+  { id:48, text:"Ak sa rodičia nedohodnú o podstatných veciach súvisiacich s výkonom rodičovských práv a povinností, súd určí majetkového opatrovníka.", answer:false },
+  { id:49, text:"Právny poriadok SR pozná 3 domnienky otcovstva a jedno osobitné konanie.", answer:false },
+  { id:50, text:"Osoba, ktorá podá návrh na náhradnú osobnú starostlivosť, musí byť spôsobilá na právne úkony.", answer:true },
+  { id:51, text:"Rodič, ktorému dieťa nebolo zverené do osobnej starostlivosti, má aj tak právo stýkať sa s dieťaťom.", answer:true },
+  { id:52, text:"Súd určí konkrétny rozsah majetku, ktorý bude poručník spravovať.", answer:true },
+  { id:53, text:"Výška odmeny majetkového opatrovníka je vecou dohody medzi ním a dieťaťom.", answer:false },
+  { id:54, text:"Majetkový opatrovník môže pri výkone správy majetku brať na seba primerané majetkové riziká.", answer:false },
+  { id:55, text:"Rodičia sú povinní nakladať s majetkom s odbornou starostlivosťou.", answer:true },
+  { id:56, text:"Súd môže predĺžiť pestúnsku starostlivosť aj po dosiahnutí plnoletosti.", answer:false },
+  { id:57, text:"Je možné osvojiť aj plnoleté dieťa.", answer:false },
+  { id:58, text:"Výživné pre maloleté dieťa možno priznať najdlhšie na dobu 5 rokov spätne odo dňa začatia konania, ak sú na to dôvody hodné osobitného zreteľa.", answer:false },
+  { id:59, text:"Žena môže zaprieť materstvo, ak dôjde k zámene v pôrodnici.", answer:false },
+  { id:60, text:"Manžel môže do troch rokov odo dňa, keď sa dozvedel o skutočnostiach dôvodne spochybňujúcich, že je otcom dieťaťa, ktoré sa narodilo jeho manželke, zaprieť na súde, že je jeho otec.", answer:true },
+  { id:61, text:"Maloletému možno priznať rodičovské práva a povinnosti.", answer:true },
+];
+
+let queue = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+let wrongQuestions = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz(wrongOnly) {
+  queue = shuffle(wrongOnly ? wrongQuestions : ALL_QUESTIONS);
+  wrongQuestions = [];
+  currentIndex = 0;
+  score = 0;
+  answered = false;
+  show('quizScreen');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = queue[currentIndex];
+  const total = queue.length;
+
+  document.getElementById('qCounter').textContent = `Otázka ${currentIndex + 1} / ${total}`;
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('qNumber').textContent = `Výrok č. ${q.id}`;
+  document.getElementById('qText').textContent = q.text;
+
+  const pct = (currentIndex / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  // reset buttons
+  const bT = document.getElementById('btnTrue');
+  const bF = document.getElementById('btnFalse');
+  bT.classList.remove('correct','wrong');
+  bF.classList.remove('correct','wrong');
+  bT.disabled = false;
+  bF.disabled = false;
+
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box hidden';
+  fb.textContent = '';
+
+  document.getElementById('btnNext').classList.add('hidden');
+  answered = false;
+}
+
+function answer(userSaidTrue) {
+  if (answered) return;
+  answered = true;
+
+  const q = queue[currentIndex];
+  const correct = (userSaidTrue === q.answer);
+
+  const bT = document.getElementById('btnTrue');
+  const bF = document.getElementById('btnFalse');
+  bT.disabled = true;
+  bF.disabled = true;
+
+  if (correct) {
+    score++;
+    document.getElementById('scoreNum').textContent = score;
+    if (userSaidTrue) bT.classList.add('correct');
+    else bF.classList.add('correct');
+  } else {
+    wrongQuestions.push(q);
+    if (userSaidTrue) { bT.classList.add('wrong'); bF.classList.add('correct'); }
+    else { bF.classList.add('wrong'); bT.classList.add('correct'); }
+  }
+
+  // Mark the correct answer visually
+  if (q.answer) bT.classList.add('correct');
+  else bF.classList.add('correct');
+
+  const fb = document.getElementById('feedbackBox');
+  if (correct) {
+    fb.className = 'feedback-box correct';
+    fb.innerHTML = '✅ Správne!';
+  } else {
+    fb.className = 'feedback-box wrong';
+    fb.innerHTML = `❌ Nesprávne! Správna odpoveď: <strong>${q.answer ? 'PRAVDA' : 'NEPRAVDA'}</strong>`;
+  }
+
+  const btnNext = document.getElementById('btnNext');
+  btnNext.classList.remove('hidden');
+  if (currentIndex + 1 >= queue.length) {
+    btnNext.textContent = 'Zobraziť výsledky 🏁';
+  } else {
+    btnNext.textContent = 'Ďalšia otázka →';
+  }
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= queue.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  const total = queue.length;
+  const pct = Math.round((score / total) * 100);
+
+  document.getElementById('resultScore').textContent = `${score} / ${total}`;
+  document.getElementById('resultPct').textContent = `Úspešnosť: ${pct} %`;
+
+  let emoji, title, sub;
+  if (pct === 100)      { emoji='🏆'; title='Perfektný výsledok!';     sub='Všetky odpovede správne. Výborne!'; }
+  else if (pct >= 80)   { emoji='🎉'; title='Skvelý výkon!';           sub='Takmer všetko si zvládol/a.'; }
+  else if (pct >= 60)   { emoji='👍'; title='Dobrý výsledok';          sub='Stále je čo zlepšovať.'; }
+  else if (pct >= 40)   { emoji='📚'; title='Potrebuješ trochu viac praxe'; sub='Zoopakuj si nesprávne odpovede!'; }
+  else                  { emoji='💪'; title='Nevzdávaj sa!';            sub='Prejdi si nesprávne odpovede a skús znova.'; }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent = sub;
+
+  const btnWrong = document.getElementById('btnWrongRetry');
+  if (wrongQuestions.length > 0) {
+    btnWrong.classList.remove('hidden');
+    btnWrong.textContent = `🔄 Zopakovať nesprávne odpovede (${wrongQuestions.length})`;
+  } else {
+    btnWrong.classList.add('hidden');
+  }
+
+  document.getElementById('progressFill').style.width = '100%';
+  show('resultScreen');
+}
+
+function goMenu() {
+  show('menuScreen');
+}
+</script>
+</body>
+</html>
