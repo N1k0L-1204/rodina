@@ -523,7 +523,7 @@ function showResult() {
   if (pct === 100)      { emoji='🏆'; title='Perfektný výsledok!';     sub='Všetky odpovede správne. Výborne!'; }
   else if (pct >= 80)   { emoji='🎉'; title='Skvelý výkon!';           sub='Takmer všetko si zvládol/a.'; }
   else if (pct >= 60)   { emoji='👍'; title='Dobrý výsledok';          sub='Stále je čo zlepšovať.'; }
-  else if (pct >= 40)   { emoji='📚'; title='Potrebuješ trochu viac praxe'; sub='Zoopakuj si nesprávne odpovede!'; }
+  else if (pct >= 40)   { emoji='📚'; title='Potrebuješ si to ešte prejsť'; sub='Zoopakuj si nesprávne odpovede!'; }
   else                  { emoji='💪'; title='Nevzdávaj sa!';            sub='Prejdi si nesprávne odpovede a skús znova.'; }
 
   document.getElementById('resultEmoji').textContent = emoji;
